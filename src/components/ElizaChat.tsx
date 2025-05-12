@@ -1,89 +1,197 @@
+// 'use client';
+
+// import React, { useState, useEffect, useRef } from 'react';
+// import ElizaBot from 'eliza-as-promised';
+
+// const ElizaChat = () => {
+//   const [eliza, setEliza] = useState<any>(null);
+//   const [input, setInput] = useState('');
+//   const [messages, setMessages] = useState<string[]>([]);
+//   const chatEndRef = useRef<HTMLDivElement>(null);
+
+//   useEffect(() => {
+//     const elizaInstance = new ElizaBot({
+//       postTransforms: [
+//         ["I am (.*)", "Why are you $1? How long have you been feeling this way?"],
+//         ["I need (.*)", "Why do you need $1? How would it help you?"],
+//         ["Because (.*)", "Is that the only reason? Could there be something else?"],
+//         ["Hello(.*)", "Hello there! How are you feeling today?"],
+//         ["My name is (.*)", "Nice to meet you, $1! What's been on your mind lately?"],
+//         ["(.*) help (.*)", "I'm here to help. What exactly do you need help with?"],
+//         ["I feel (.*)", "What’s making you feel $1? Let's talk about it."],
+//         ["(.*)", "That's interesting. Could you explain it a bit more?"]
+//       ]
+//     });
+
+//     setEliza(elizaInstance);
+//     setMessages(["🤖 Eliza: Hi there! I'm Eliza. How are you feeling today?"]);
+//   }, []);
+
+//   useEffect(() => {
+//     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+//   }, [messages]);
+
+//   const handleSend = () => {
+//     if (!input.trim() || !eliza) return;
+
+//     const userMessage = `🧑 You: ${input}`;
+//     const elizaResponse = `🤖 Eliza: ${eliza.transform(input)}`;
+
+//     setMessages(prev => [...prev, userMessage, elizaResponse]);
+//     setInput('');
+//   };
+
+//   return (
+//     <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-blue-100 to-purple-200 p-4">
+//       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg flex flex-col overflow-hidden">
+
+//         {/* Header - now fixed */}
+//         <div className="sticky top-0 bg-blue-200 p-6 text-center border-b z-10">
+//           <h1 className="text-2xl font-bold text-gray-800 mb-1">🤖 Eliza - Your Friendly Listener</h1>
+//           <p className="text-gray-700 text-sm">Feel free to share what's on your mind!</p>
+//         </div>
+
+//         {/* Messages */}
+//         <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-white">
+//           {messages.map((msg, idx) => (
+//             <div
+//               key={idx}
+//               className={`p-3 rounded-lg max-w-[80%] ${
+//                 msg.startsWith('🧑') ? 'bg-blue-100 self-end ml-auto text-right' : 'bg-gray-100 text-left'
+//               }`}
+//             >
+//               {msg}
+//             </div>
+//           ))}
+//           <div ref={chatEndRef} />
+//         </div>
+
+//         {/* Input */}
+//         <div className="p-4 border-t flex gap-2">
+//           <input
+//             type="text"
+//             className="flex-1 p-3 rounded-xl border focus:outline-none focus:ring-2 focus:ring-blue-400"
+//             placeholder="Type your message..."
+//             value={input}
+//             onChange={(e) => setInput(e.target.value)}
+//             onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+//           />
+//           <button
+//             onClick={handleSend}
+//             className="bg-blue-500 hover:bg-blue-600 text-white rounded-xl px-6 py-3 font-semibold"
+//           >
+//             Send
+//           </button>
+//         </div>
+
+//       </div>
+//     </div>
+//   );
+// };
+
+// export default ElizaChat;
+
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
 import ElizaBot from 'eliza-as-promised';
 
+type Message = {
+  sender: 'user' | 'eliza';
+  text: string;
+};
+
+const initEliza = () =>
+  new ElizaBot({
+    postTransforms: [
+      ["I am (.*)", "Why are you $1? How long have you been feeling this way?"],
+      ["I need (.*)", "Why do you need $1? How would it help you?"],
+      ["Because (.*)", "Is that the only reason? Could there be something else?"],
+      ["Hello(.*)", "Hello there! How are you feeling today?"],
+      ["My name is (.*)", "Nice to meet you, $1! What's been on your mind lately?"],
+      ["(.*) help (.*)", "I'm here to help. What exactly do you need help with?"],
+      ["I feel (.*)", "What’s making you feel $1? Let's talk about it."],
+      ["(.*)", "That's interesting. Could you explain it a bit more?"]
+    ]
+  });
+
 const ElizaChat = () => {
-  const [eliza, setEliza] = useState<any>(null);
+  const [eliza, setEliza] = useState<ElizaBot | null>(null);
   const [input, setInput] = useState('');
-  const [messages, setMessages] = useState<string[]>([]);
-  const chatEndRef = useRef<HTMLDivElement>(null);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const chatRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const elizaInstance = new ElizaBot({
-      postTransforms: [
-        ["I am (.*)", "Why are you $1? How long have you been feeling this way?"],
-        ["I need (.*)", "Why do you need $1? How would it help you?"],
-        ["Because (.*)", "Is that the only reason? Could there be something else?"],
-        ["Hello(.*)", "Hi there! How are you feeling today?"],
-        ["My name is (.*)", "Nice to meet you, $1! What would you like to talk about?"],
-        ["(.*) help (.*)", "I'm here to help you. What kind of help are you looking for?"],
-        ["I feel (.*)", "Why do you feel $1? Can you describe it more?"],
-        ["(.*)", "That's interesting. Can you tell me more about it?"]
-      ]
-    });
-
-    setEliza(elizaInstance);
-    setMessages(["🤖 Eliza: Hello! How are you feeling today?"]);
+    const instance = initEliza();
+    setEliza(instance);
+    setMessages([{ sender: 'eliza', text: "Hi there! I'm Eliza. How are you feeling today?" }]);
   }, []);
 
-  const handleSend = () => {
+  useEffect(() => {
+    chatRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  const sendMessage = () => {
     if (!input.trim() || !eliza) return;
 
-    const userMessage = `🧑 You: ${input}`;
-    const elizaResponse = `🤖 Eliza: ${eliza.transform(input)}`;
+    const userMsg: Message = { sender: 'user', text: input };
+    const response: Message = { sender: 'eliza', text: eliza.transform(input) };
 
-    setMessages(prev => [...prev, userMessage, elizaResponse]);
+    setMessages((prev) => [...prev, userMsg, response]);
     setInput('');
-
-    // Scroll to bottom
-    setTimeout(() => {
-      chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, 100);
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-blue-100 to-purple-200 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg flex flex-col">
-        
-        <div className="p-6 text-center border-b">
-          <h1 className="text-2xl font-bold text-gray-800 mb-1">Eliza Chatbot 🤖</h1>
-          <p className="text-gray-500 text-sm">Talk about your feelings!</p>
-        </div>
+    <main className="min-h-screen bg-gradient-to-tr from-indigo-100 via-purple-100 to-pink-100 p-6 flex items-center justify-center">
+      <section className="w-full max-w-xl bg-white shadow-xl rounded-2xl flex flex-col overflow-hidden">
 
-        <div className="flex-1 overflow-y-auto p-6 space-y-4">
-          {messages.map((msg, idx) => (
+        {/* Header */}
+        <header className="bg-indigo-200 p-6 text-center">
+          <h2 className="text-xl font-bold text-gray-800">🤖 Eliza the Listener</h2>
+          <p className="text-gray-600 text-sm">What’s on your mind today?</p>
+        </header>
+
+        {/* Messages */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          {messages.map((msg, index) => (
             <div
-              key={idx}
-              className={`p-3 rounded-lg max-w-[80%] ${
-                msg.startsWith('🧑') ? 'bg-blue-100 self-end ml-auto text-right' : 'bg-gray-100 text-left'
-              }`}
+              key={index}
+              className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
             >
-              {msg}
+              <div
+                className={`p-3 max-w-xs rounded-lg shadow-md ${
+                  msg.sender === 'user'
+                    ? 'bg-blue-100 text-right'
+                    : 'bg-gray-200 text-left'
+                }`}
+              >
+                <span className="text-sm">{msg.sender === 'user' ? '🧑 You' : '🤖 Eliza'}: </span>
+                <span>{msg.text}</span>
+              </div>
             </div>
           ))}
-          <div ref={chatEndRef} />
+          <div ref={chatRef} />
         </div>
 
-        <div className="p-4 border-t flex gap-2">
+        {/* Input */}
+        <footer className="p-4 border-t flex gap-2">
           <input
+            className="flex-1 p-3 rounded-xl border focus:ring-2 focus:ring-indigo-300"
             type="text"
-            className="flex-1 p-3 rounded-xl border focus:outline-none focus:ring-2 focus:ring-blue-400"
-            placeholder="Type your message..."
+            placeholder="Type something..."
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+            onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
           />
           <button
-            onClick={handleSend}
-            className="bg-blue-500 hover:bg-blue-600 text-white rounded-xl px-6 py-3 font-semibold"
+            className="bg-indigo-500 hover:bg-indigo-600 text-white rounded-xl px-4 py-2"
+            onClick={sendMessage}
           >
             Send
           </button>
-        </div>
-        
-      </div>
-    </div>
+        </footer>
+      </section>
+    </main>
   );
 };
 
